@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SymfonyCasts\Bundle\ResetPassword\tests\UnitTests\Generator;
 
+use SymfonyCasts\Bundle\ResetPassword\Exception\TokenException;
 use SymfonyCasts\Bundle\ResetPassword\Generator\TokenGenerator;
 use PHPUnit\Framework\TestCase;
 use SymfonyCasts\Bundle\ResetPassword\tests\Fixtures\TokenGeneratorTestFixture;
@@ -39,9 +40,9 @@ class TokenGeneratorTest extends TestCase
     }
 
     /** @test */
-    public function RandomBytesThrowsExceptionWithBadSize(): void
+    public function randomBytesThrowsExceptionWithBadSize(): void
     {
-        $this->expectException(\Error::class);
+        $this->expectException(TokenException::class);
         $this->fixture->getRandomBytesFromProtected(0);
     }
 
@@ -126,12 +127,28 @@ class TokenGeneratorTest extends TestCase
      */
     public function throwsExceptionWithEmptyParams($key, $verifier, $userId): void
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(TokenException::class);
 
         $mockDate = $this->createMock(\DateTimeImmutable::class);
 
         $generator = new TokenGenerator();
         $generator->getToken($key, $mockDate, $verifier, $userId);
+    }
+
+    /** @test */
+    public function throwsExceptionIfExpiresInThePast(): void
+    {
+        $mockDate = $this->createMock(\DateTimeImmutable::class);
+        $mockDate
+            ->expects($this->once())
+            ->method('getTimestamp')
+            ->willReturn(1580685011)
+        ;
+
+        $this->expectException(TokenException::class);
+
+        $generator = new TokenGenerator();
+        $generator->getToken('x', $mockDate, 'x', 'x');
     }
 
     /** @test */
@@ -141,6 +158,11 @@ class TokenGeneratorTest extends TestCase
         $mockExpectedAt
             ->method('format')
             ->willReturn('2020')
+        ;
+
+        $mockExpectedAt
+            ->method('getTimestamp')
+            ->willReturn(9999999999999)
         ;
 
         $signingKey = 'abcd';
