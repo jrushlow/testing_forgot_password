@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace SymfonyCasts\Bundle\ResetPassword\Generator;
 
+use SymfonyCasts\Bundle\ResetPassword\Exception\TokenException;
+
 /**
  * Generate hashed HMAC token
  *
@@ -11,8 +13,7 @@ namespace SymfonyCasts\Bundle\ResetPassword\Generator;
  */
 class TokenGenerator
 {
-    //@TODO default algo.. provide option to allow different algo?
-    public const HASH_ALGO = 'sha256';
+    public const HMAC_HASH_ALGO = 'sha256';
 
     /** @throws \Throwable */
     public function getToken(
@@ -27,7 +28,7 @@ class TokenGenerator
             $this->isEmpty($param);
         }
 
-        //@todo edgecase $expiresAt already in the past or invalid value. Save that case for controller/helper?
+        $this->isExpireValid($expiresAt);
 
         return $this->generateHash($signingKey, $expiresAt, $verifier, $userId);
     }
@@ -36,14 +37,18 @@ class TokenGenerator
     private function isEmpty(string $value): void
     {
         if (empty($value)) {
-            throw $this->oops();
+            throw TokenException::getIsEmpty();
         }
     }
 
-    private function oops(): \Throwable
+    /** @throws TokenException */
+    private function isExpireValid(\DateTimeImmutable $expire): void
     {
-        /** @TODO Need something better */
-        return new \Exception('OOPS');
+        $time = $expire->getTimestamp();
+
+        if ($time <= time()) {
+            throw TokenException::getInvalidTokenExpire();
+        }
     }
 
     protected function generateHash(
@@ -54,7 +59,7 @@ class TokenGenerator
     ): string {
 
         return \hash_hmac(
-            self::HASH_ALGO,
+            self::HMAC_HASH_ALGO,
             $this->encodeHashData($expiresAt, $verifier, $userId),
             $signingKey,
             false
@@ -71,8 +76,6 @@ class TokenGenerator
         while (($len = strlen($string)) < $length) {
             $size = $length - $len;
 
-            /** @TODO ?Keep separated due to \Throwable? vs handle \Throwable in loop.. */
-//            $bytes = random_bytes($size);
             $bytes = $this->getRandomBytes($size);
 
             $string .= substr(
@@ -84,12 +87,10 @@ class TokenGenerator
 
     protected function getRandomBytes(int $size): string
     {
-        //@todo edge case: $size = 0 -> \Error
-        /** @TODO Bad oops */
         try {
             return \random_bytes($size);
-        } catch (\Exception $exception) {
-            throw $this->oops();
+        } catch (\Error $exception) {
+            throw TokenException::getBadBytes();
         }
     }
 
