@@ -3,6 +3,7 @@
 namespace SymfonyCasts\Bundle\ResetPassword\Persistence\Repository;
 
 use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetRequest;
+use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetRequestInterface;
 
 trait PasswordResetRequestRepositoryTrait
 {
@@ -23,7 +24,7 @@ trait PasswordResetRequestRepositoryTrait
             ->getSingleIdentifierValue($user);
     }
 
-    public function persistPasswordResetRequest(PasswordResetRequest $passwordResetRequest)
+    public function persistPasswordResetRequest(PasswordResetRequestInterface $passwordResetRequest)
     {
         $this->getEntityManager()->persist($passwordResetRequest);
         $this->getEntityManager()->flush($passwordResetRequest);
