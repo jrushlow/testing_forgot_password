@@ -25,27 +25,27 @@ class PasswordResetRequestRepository extends ServiceEntityRepository implements 
         parent::__construct($registry, PasswordResetRequest::class);
     }
 
-    public function createPasswordResetRequest(
-        object $user,
-        \DateTimeInterface $expiresAt,
-        string $selector,
-        string $hashedToken
-    ): \SymfonyCasts\Bundle\ResetPassword\Persistence\PasswordResetRequest {
-        // TODO: Implement createPasswordResetRequest() method.
-    }
+//    public function createPasswordResetRequest(
+//        object $user,
+//        \DateTimeInterface $expiresAt,
+//        string $selector,
+//        string $hashedToken
+//    ): PasswordResetRequestInterface {
+//        // TODO: Implement createPasswordResetRequest() method.
+//    }
 
-    public function persistPasswordResetRequest(PasswordResetRequestInterface $passwordResetRequest)
-    {
-        // TODO: Implement persistPasswordResetRequest() method.
-    }
-
-    public function findPasswordResetRequest(string $selector): ?PasswordResetRequestInterface
-    {
-        // TODO: Implement findPasswordResetRequest() method.
-    }
-
-    public function getMostRecentNonExpiredRequestDate(object $user): ?\DateTimeInterface
-    {
-        // TODO: Implement getMostRecentNonExpiredRequestDate() method.
-    }
+//    public function persistPasswordResetRequest(PasswordResetRequestInterface $passwordResetRequest)
+//    {
+//        // TODO: Implement persistPasswordResetRequest() method.
+//    }
+//
+//    public function findPasswordResetRequest(string $selector): ?PasswordResetRequestInterface
+//    {
+//        // TODO: Implement findPasswordResetRequest() method.
+//    }
+//
+//    public function getMostRecentNonExpiredRequestDate(object $user): ?\DateTimeInterface
+//    {
+//        // TODO: Implement getMostRecentNonExpiredRequestDate() method.
+//    }
 }
