@@ -1,10 +1,9 @@
 name: ResetPassword CI
 on: [push, pull_request]
-
 jobs:
   pw-reset:
     name: ResetPassword
-    runs-on: ubuntu
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         php-versions: ['7.2', '7.3', '7.4']
@@ -33,5 +32,3 @@ jobs:
 
       - name: Unit Tests
         run: bin/phpunit -c $GITHUB_WORKSPACE/phpunit.xml.dist
-
-
