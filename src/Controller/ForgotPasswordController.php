@@ -95,8 +95,9 @@ class ForgotPasswordController extends AbstractController
     /**
      * @Route("/reset/{tokenAndSelector}", name="app_reset_password")
      */
-    public function reset(Request $request, UserPasswordEncoderInterface $passwordEncoder, $tokenAndSelector = null): Response
+    public function reset(Request $request, PasswordResetHelperInterface $helper, UserPasswordEncoderInterface $passwordEncoder, $tokenAndSelector = null): Response
     {
+        //Put token in session and redirect to self
         if ($tokenAndSelector) {
             // We store token in session and remove it from the URL,
             // to avoid any leak if someone get to know the URL (AJAX requests, Analytics...).
@@ -105,26 +106,32 @@ class ForgotPasswordController extends AbstractController
             return $this->redirectToRoute('app_reset_password');
         }
 
+        //Get token out of session storage
         $tokenAndSelector = $request->getSession()->get(self::SESSION_TOKEN_KEY);
         if (!$tokenAndSelector) {
             throw $this->createNotFoundException();
         }
 
+        //Retrieve token object from database using token from email
         $passwordResetToken = $this->getDoctrine()->getRepository(PasswordResetRequest::class)->findOneBy([
             'selector' => substr($tokenAndSelector, 0, PasswordResetRequest::SELECTOR_LENGTH),
         ]);
 
+        //If token doesnt exist...
         if (!$passwordResetToken) {
             throw $this->createNotFoundException();
         }
 
-        if ($passwordResetToken->isExpired() || !$passwordResetToken->isTokenEquals(substr($tokenAndSelector, PasswordResetRequest::SELECTOR_LENGTH))) {
-            $this->getDoctrine()->getManager()->remove($passwordResetToken);
-            $this->getDoctrine()->getManager()->flush();
+        //Validate token using password helper
+//        if ($passwordResetToken->isExpired() || !$passwordResetToken->isTokenEquals(substr($tokenAndSelector, PasswordResetRequest::SELECTOR_LENGTH))) {
+//            $this->getDoctrine()->getManager()->remove($passwordResetToken);
+//            $this->getDoctrine()->getManager()->flush();
+//
+//            throw $this->createNotFoundException();
+//        }
 
-            throw $this->createNotFoundException();
-        }
-
+        //Reset password after token verified
+        //@TODO Move to separate method
         $form = $this->createForm(PasswordResettingFormType::class);
         $form->handleRequest($request);
 
