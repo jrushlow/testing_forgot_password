@@ -147,6 +147,7 @@ class ForgotPasswordController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // A PasswordResetToken should be used only once, remove it.
+            $helper->removeResetRequest($tokenAndSelector);
 //            $this->getDoctrine()->getManager()->remove($passwordResetToken);
 
             // Encode the plain password, and set it.
