@@ -6,6 +6,7 @@ use App\Entity\PasswordResetRequest;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetRequestInterface;
 use SymfonyCasts\Bundle\ResetPassword\Persistence\PasswordResetRequestRepositoryInterface;
 use SymfonyCasts\Bundle\ResetPassword\Persistence\Repository\PasswordResetRequestRepositoryTrait;
@@ -23,6 +24,15 @@ class PasswordResetRequestRepository extends ServiceEntityRepository implements 
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, PasswordResetRequest::class);
+    }
+
+    public function createPasswordResetRequest(
+        UserInterface $user,
+        \DateTimeImmutable $expiresAt,
+        string $selector,
+        string $hashedToken
+    ): PasswordResetRequestInterface {
+        // TODO: Implement createPasswordResetRequest() method.
     }
 
 //    public function createPasswordResetRequest(
