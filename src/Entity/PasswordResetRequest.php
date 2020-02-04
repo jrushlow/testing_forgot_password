@@ -34,7 +34,7 @@ class PasswordResetRequest implements PasswordResetRequestInterface
      */
     private $user;
 
-    public function __construct(UserInterface $user, \DateTimeInterface $expiresAt, string $selector, string $hashedToken)
+    public function __construct(UserInterface $user, \DateTimeImmutable $expiresAt, string $selector, string $hashedToken)
     {
         $this->user = $user;
 
