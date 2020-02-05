@@ -20,6 +20,7 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetToken;
+use SymfonyCasts\Bundle\ResetPassword\PasswordResetHelper;
 use SymfonyCasts\Bundle\ResetPassword\PasswordResetHelperInterface;
 
 /**
@@ -102,7 +103,7 @@ class ForgotPasswordController extends AbstractController
         $session->remove(self::SESSION_CAN_CHECK_EMAIL);
 
         return $this->render('forgot_password/check_email.html.twig', [
-            'tokenLifetime' => PasswordResetRequest::LIFETIME_HOURS,
+            'tokenLifetime' => PasswordResetHelper::LIFETIME_HOURS,
         ]);
     }
 

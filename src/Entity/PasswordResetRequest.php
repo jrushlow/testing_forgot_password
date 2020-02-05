@@ -12,11 +12,6 @@ use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetRequestTrait;
  */
 class PasswordResetRequest implements PasswordResetRequestInterface
 {
-    //@TODO Used in check_email.html.twig, is value correct?
-    public const LIFETIME_HOURS = 1;
-    //@TODO Used by ForgotPasswordController::reset() is value and implementation correct?
-    public const SELECTOR_LENGTH = 20;
-
     //@TODO ugly
     use PasswordResetRequestTrait {
         PasswordResetRequestTrait::__construct as private __traitConstruct;
