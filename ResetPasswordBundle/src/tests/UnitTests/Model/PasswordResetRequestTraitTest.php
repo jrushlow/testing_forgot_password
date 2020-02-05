@@ -1,23 +1,43 @@
 <?php
 
-declare(strict_types=1);
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-namespace App\Tests\UnitTests\BundleUnitTests\Model;
+namespace SymfonyCasts\Bundle\ResetPassword\tests\UnitTests\Model;
 
-use App\Tests\Fixtures\PasswordResetRequestTraitFixture;
-use PHPUnit\Framework\TestCase;
+use SymfonyCasts\Bundle\ResetPassword\tests\Fixtures\PasswordResetRequestTraitTestFixture;
 
-class PasswordResetRequestTraitFixtureTest extends TestCase
+/**
+ * @author  Jesse Rushlow <jr@rushlow.dev>
+ */
+class PasswordResetRequestTraitTest extends AbstractModelUnitTest
 {
-    /** @var \DateTimeImmutable */
+    protected $sut = PasswordResetRequestTraitTestFixture::class;
+
+    /**
+     * @var \DateTimeImmutable
+     */
     protected $expiresAt;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $selector;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $hashedToken;
 
+    /**
+     * @inheritDoc
+     */
     protected function setUp()
     {
         $this->expiresAt = $this->createMock(\DateTimeImmutable::class);
@@ -25,9 +45,9 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
         $this->hashedToken = 'hashed';
     }
 
-    protected function getFixture(): PasswordResetRequestTraitFixture
+    protected function getFixture(): PasswordResetRequestTraitTestFixture
     {
-        return new PasswordResetRequestTraitFixture(
+        return new $this->sut(
             $this->expiresAt,
             $this->selector,
             $this->hashedToken
@@ -36,46 +56,23 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
 
     public function propertyDataProvider(): \Generator
     {
-        yield ['selector'];
-        yield ['hashedToken'];
-        yield ['requestedAt'];
-        yield ['expiresAt'];
-    }
-
-    /**
-     * @test
-     * @dataProvider propertyDataProvider
-     */
-    public function hasProperty(string $propertyName): void
-    {
-        self::assertClassHasAttribute(
-            $propertyName,
-            PasswordResetRequestTraitFixture::class,
-            sprintf('PasswordResetRequestTrait::class does not have %s property defined.', $propertyName)
-        );
+        yield ['selector', 'protected', '@ORM\Column(type="string", length=100)'];
+        yield ['hashedToken', 'protected', '@ORM\Column(type="string", length=100)'];
+        yield ['requestedAt', 'protected', '@ORM\Column(type="datetime_immutable")'];
+        yield ['expiresAt', 'protected', '@ORM\Column(type="datetime_immutable")'];
     }
 
     public function methodDataProvider(): \Generator
     {
-        yield ['getRequestedAt'];
-        yield ['isExpired'];
-        yield ['getExpiresAt'];
-        yield ['getHashedToken'];
+        yield ['getRequestedAt', 'public'];
+        yield ['isExpired', 'public'];
+        yield ['getExpiresAt', 'public'];
+        yield ['getHashedToken', 'public'];
     }
 
     /**
      * @test
-     * @dataProvider methodDataProvider
      */
-    public function hasMethod(string $methodName): void
-    {
-        self::assertTrue(
-            method_exists(PasswordResetRequestTraitFixture::class, $methodName),
-            sprintf('PasswordResetRequestTrait::class does not have %s method defined.', $methodName)
-        );
-    }
-
-    /** @test */
     public function getRequestAtReturnsImmutableDateTime(): void
     {
         $trait = $this->getFixture();
@@ -83,7 +80,9 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
         self::assertInstanceOf(\DateTimeImmutable::class, $trait->getRequestedAt());
     }
 
-    /** @test */
+    /**
+     * @test
+     */
     public function isExpiredReturnsFalseWithTimeInFuture(): void
     {
         $this->expiresAt
@@ -96,7 +95,9 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
         self::assertFalse($trait->isExpired());
     }
 
-    /** @test */
+    /**
+     * @test
+     */
     public function isExpiredReturnsTrueWithTimeInPast(): void
     {
         $this->expiresAt
@@ -109,7 +110,9 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
         self::assertTrue($trait->isExpired());
     }
 
-    /** @test */
+    /**
+     * @test
+     */
     public function getExpiresAtReturnsDateTimeInterface(): void
     {
         $trait = $this->getFixture();
@@ -117,7 +120,9 @@ class PasswordResetRequestTraitFixtureTest extends TestCase
         self::assertInstanceOf(\DateTimeInterface::class, $trait->getExpiresAt());
     }
 
-    /** @test */
+    /**
+     * @test
+     */
     public function getHashedTokenReturnsToken(): void
     {
         $trait = $this->getFixture();
