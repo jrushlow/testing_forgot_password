@@ -6,9 +6,10 @@ use App\Entity\PasswordResetRequest;
 use App\Entity\User;
 use App\Form\PasswordRequestFormType;
 use App\Form\PasswordResettingFormType;
-use App\Repository\UserRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -18,6 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
+use SymfonyCasts\Bundle\ResetPassword\Model\PasswordResetToken;
 use SymfonyCasts\Bundle\ResetPassword\PasswordResetHelperInterface;
 
 /**
@@ -37,44 +39,54 @@ class ForgotPasswordController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user = $this->getDoctrine()->getRepository(User::class)->findOneBy([
-                'email' => $form->get('email')->getData(),
-            ]);
-
-            // Needed to be able to access next page, app_check_email
-            $request->getSession()->set(self::SESSION_CAN_CHECK_EMAIL, true);
-
-            // Do not reveal whether a user account was found or not.
-            if (!$user) {
-                return $this->redirectToRoute('app_check_email');
-            }
-
-            try {
-                $resetToken = $passwordResetHelper->generateResetToken($user);
-            } catch (ResetPasswordExceptionInterface $e) {
-                // TODO - send an error to the template
-                //$e->getReason();
-                // temporarily, just throw
-                throw $e;
-            }
-
-            $email = (new TemplatedEmail())
-                ->from(new Address('noreply@mydomain.com', 'Noreply'))
-                ->to($user->getEmail())
-                ->subject('Your password reset request')
-                ->htmlTemplate('forgot_password/email.html.twig')
-                ->context([
-                    'resetToken' => $resetToken,
-                ])
-            ;
-            $mailer->send($email);
-
-            return $this->redirectToRoute('app_check_email');
+            return $this->processRequestForm($form, $request, $mailer, $passwordResetHelper);
         }
 
         return $this->render('forgot_password/request.html.twig', [
             'requestForm' => $form->createView(),
         ]);
+    }
+
+    protected function processRequestForm(FormInterface $form, Request $request, MailerInterface $mailer, PasswordResetHelperInterface $passwordResetHelper): RedirectResponse
+    {
+        $user = $this->getDoctrine()->getRepository(User::class)->findOneBy([
+            'email' => $form->get('email')->getData(),
+        ]);
+
+        // Needed to be able to access next page, app_check_email
+        $request->getSession()->set(self::SESSION_CAN_CHECK_EMAIL, true);
+
+        // Do not reveal whether a user account was found or not.
+        if (!$user) {
+            return $this->redirectToRoute('app_check_email');
+        }
+
+        try {
+            $resetToken = $passwordResetHelper->generateResetToken($user);
+        } catch (ResetPasswordExceptionInterface $e) {
+            // TODO - send an error to the template
+            //$e->getReason();
+            // temporarily, just throw
+            throw $e;
+        }
+
+        $email = $this->getEmailTemplate($user->getEmail(), $resetToken);
+        $mailer->send($email);
+
+        return $this->redirectToRoute('app_check_email');
+    }
+
+    protected function getEmailTemplate(string $emailAddress, PasswordResetToken $resetToken): TemplatedEmail
+    {
+        return (new TemplatedEmail())
+            ->from(new Address('noreply@mydomain.com', 'Noreply'))
+            ->to($emailAddress)
+            ->subject('Your password reset request')
+            ->htmlTemplate('forgot_password/email.html.twig')
+            ->context([
+                'resetToken' => $resetToken,
+            ])
+        ;
     }
 
     /**
@@ -121,24 +133,6 @@ class ForgotPasswordController extends AbstractController
         $user = $this->getDoctrine()->getRepository(User::class)->findOneBy([
             'id' => $partialUser->getId(),
         ]);
-//        die;
-//        //Retrieve token object from database using token from email
-//        $passwordResetToken = $this->getDoctrine()->getRepository(PasswordResetRequest::class)->findOneBy([
-//            'selector' => substr($tokenAndSelector, 0, PasswordResetRequest::SELECTOR_LENGTH),
-//        ]);
-//
-//        //If token doesnt exist...
-//        if (!$passwordResetToken) {
-//            throw $this->createNotFoundException();
-//        }
-
-
-//        if ($passwordResetToken->isExpired() || !$passwordResetToken->isTokenEquals(substr($tokenAndSelector, PasswordResetRequest::SELECTOR_LENGTH))) {
-//            $this->getDoctrine()->getManager()->remove($passwordResetToken);
-//            $this->getDoctrine()->getManager()->flush();
-//
-//            throw $this->createNotFoundException();
-//        }
 
         //Reset password after token verified
         //@TODO Move to separate method
@@ -148,22 +142,14 @@ class ForgotPasswordController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // A PasswordResetToken should be used only once, remove it.
             $helper->removeResetRequest($tokenAndSelector);
-//            $this->getDoctrine()->getManager()->remove($passwordResetToken);
 
             // Encode the plain password, and set it.
-            $hash = $passwordEncoder->encodePassword(
+            $encodedPassword = $passwordEncoder->encodePassword(
                 $user,
                 $form->get('plainPassword')->getData()
             );
 
-            $user->setPassword($hash);
-//            $passwordResetToken->getUser()->setPassword(
-//                $passwordEncoder->encodePassword(
-//                    $passwordResetToken->getUser(),
-//                    $form->get('plainPassword')->getData()
-//                )
-//            );
-
+            $user->setPassword($encodedPassword);
             $this->getDoctrine()->getManager()->flush();
 
             // TODO: please check the login route | CHANGE ROUTE, APP_FORGOT_PASSWORD_REQUEST USED IN DEVELOPMENT
