@@ -1,23 +1,25 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Tests\FunctionalTests\Controller;
 
-use App\Controller\ForgotPasswordController;
-use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DomCrawler\Crawler;
 
 class ForgotPasswordControllerTest extends WebTestCase
 {
+    protected function makeRequest(string $uri, string $method = 'GET'): KernelBrowser
+    {
+        $client = static::createClient();
+        $client->request($method, $uri);
+        return $client;
+    }
+
     /**
      * @test
      */
     public function showsResetRequestForm(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/forgot-password/request');
+        $this->makeRequest('/forgot-password/request');
 
         self::assertResponseIsSuccessful();
     }
@@ -27,9 +29,7 @@ class ForgotPasswordControllerTest extends WebTestCase
      */
     public function onSubmitRedirectToEmailNotification(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/forgot-password/request');
-
+        $client = $this->makeRequest('/forgot-password/request');
         $client->submitForm('Send e-mail', [
             'password_request_form[email]' => 'jr@rushlow.dev'
         ]);
@@ -42,13 +42,10 @@ class ForgotPasswordControllerTest extends WebTestCase
      */
     public function errorDisplayedWhenThrottleLimitReached(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/forgot-password/request');
-
+        $client = $this->makeRequest('/forgot-password/request');
         $client->submitForm('Send e-mail', [
             'password_request_form[email]' => 'jr@rushlow.dev'
         ]);
-
 
         $client->followRedirects();
         $client->request('GET', '/forgot-password/request');
@@ -65,9 +62,7 @@ class ForgotPasswordControllerTest extends WebTestCase
      */
     public function successfulRequestSendsEmail(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/forgot-password/request');
-
+        $client = $this->makeRequest('/forgot-password/request');
         $client->submitForm('Send e-mail', [
             'password_request_form[email]' => 'jr@rushlow.dev'
         ]);
@@ -80,9 +75,7 @@ class ForgotPasswordControllerTest extends WebTestCase
      */
     public function emailContainsValidResetToken(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/forgot-password/request');
-
+        $client = $this->makeRequest('/forgot-password/request');
         $client->submitForm('Send e-mail', [
             'password_request_form[email]' => 'jr@rushlow.dev'
         ]);
