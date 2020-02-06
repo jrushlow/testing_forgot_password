@@ -3,7 +3,7 @@ on: [push, pull_request]
 jobs:
   pw-reset:
     env:
-      DATABASE_URL: mysql://root:password@127.0.0.1:3306/forgot_pw_ci?serverVersion=5.7
+      DATABASE_URL: mysql://root:password@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/forgot_pw_ci?serverVersion=5.7
       APP_ENV: test
     name: ResetPassword
     runs-on: ubuntu-latest
