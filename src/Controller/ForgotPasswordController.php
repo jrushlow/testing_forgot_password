@@ -65,10 +65,13 @@ class ForgotPasswordController extends AbstractController
         try {
             $resetToken = $passwordResetHelper->generateResetToken($user);
         } catch (ResetPasswordExceptionInterface $e) {
-            // TODO - send an error to the template
-            //$e->getReason();
-            // temporarily, just throw
-            throw $e;
+            // TODO - make this better..
+            $this->addFlash('error', sprintf(
+                'Ooops something went wrong. %s',
+                $e->getReason()
+            ));
+
+            return $this->redirectToRoute('app_forgot_password_request');
         }
 
         $email = $this->getEmailTemplate($user->getEmail(), $resetToken);
