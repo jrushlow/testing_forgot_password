@@ -106,8 +106,6 @@ class ForgotPasswordController extends AbstractController
 
             /**
              * We are assuming the user object HAS a setPassword method..
-             * @TODO handle this if it doesnt/sets password using different method.
-             * @psalm-suppress UndefinedInterfaceMethod
              */
             $user->setPassword($encodedPassword);
             $this->getDoctrine()->getManager()->flush();
